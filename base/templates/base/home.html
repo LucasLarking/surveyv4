@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content%}
+<h1>Home</h1>
+<form action="" method="POST" id="Create_question_form">
+    {%csrf_token%}
+    {{Create_question_form}}
+    <br>
+  
+    {{option_formset}}
+    <input type="submit" value="Submit">
+    {{ option_formset.non_form_errors }}
+</form>
+
+
+<style>
+    label {
+        display: block;
+        margin-top: 20px;
+    }
+</style>
+
+{% endblock content%}
