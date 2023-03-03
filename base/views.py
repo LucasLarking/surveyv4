@@ -1,33 +1,105 @@
-from django.shortcuts import render
-from .forms import Create_question_form, Create_option_form, BaseOptionFormset
+from django.shortcuts import render, get_object_or_404
+from django.db.models.aggregates import Count
 from django.forms import BaseFormSet, formset_factory
 
-def home(request):
-    option_formset = formset_factory(Create_option_form, formset=BaseOptionFormset, extra=2)
-    create_option_formset = option_formset()
-    if request.method == 'POST':
-        print('########################################################')
-        print('########################################################')
-        print('########################################################')
-        create_option_formset = option_formset(request.POST, request.FILES)
 
-        question_form = Create_question_form(request.POST)
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
-        if question_form.is_valid():
-            print('Question valid')
-        if create_option_formset.is_valid():
-            print('option valid')
+from .forms import Create_question_form, Create_option_form, BaseOptionFormset
+from .serializers import QuestionSerializer, SurveySerializer
+from .models import Survey, Question, Option
 
-            for form in create_option_formset:
-                print('option', form.cleaned_data)
-        else:
-            print('not valid')
-            print(create_option_formset.errors)
-            print(create_option_formset.non_form_errors())
 
-    context = {
-        'Create_question_form': Create_question_form(),
-        'option_formset': create_option_formset
-    }
+class SurveyList(APIView):
+    def get(self, request):
+        surveys_qs = Survey.objects.annotate(
+            question_count=Count('question')).all()
+        serializer = SurveySerializer(surveys_qs, many=True)
+        return Response(serializer.data)
+  
+    def post(self, request):
+        serializer = SurveySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        print(serializer.validated_data)
+        serializer.save()
 
-    return render(request, 'base/home.html', context)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+@api_view(['GET', 'POST'])
+def survey_list(request):
+    if request.method == 'GET':
+        surveys_qs = Survey.objects.annotate(
+            question_count=Count('question')).all()
+        serializer = SurveySerializer(surveys_qs, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = SurveySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        print(serializer.validated_data)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def survey_detail(request, pk):
+    survey_obj = get_object_or_404(
+        Survey.objects.annotate(
+            question_count=Count('question')), pk=pk)
+
+    if request.method == 'GET':
+        serializer = SurveySerializer(survey_obj)
+
+        return Response(serializer.data)
+
+    if request.method == 'PUT':
+        serializer = SurveySerializer(survey_obj, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    elif request.method == 'DELETE':
+        survey_obj.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'POST'])
+def question_list(request):
+    if request.method == 'GET':
+        questions_qs = Question.objects.select_related('survey').all()
+        serializer = QuestionSerializer(questions_qs, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = QuestionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        print(serializer.validated_data)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def question_detail(request, pk):
+    question_obj = get_object_or_404(Question, pk=pk)
+
+    if request.method == 'GET':
+        serializer = QuestionSerializer(question_obj)
+
+        return Response(serializer.data)
+
+    if request.method == 'PUT':
+        serializer = QuestionSerializer(question_obj, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    elif request.method == 'DELETE':
+        question_obj.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -1,14 +1,31 @@
 {% extends 'base.html' %}
 {% block content%}
 <h1>Home</h1>
+
 <form action="" method="POST" id="Create_question_form">
     {%csrf_token%}
     {{Create_question_form}}
     <br>
-  
-    {{option_formset}}
+    {{ option_formset.management_form }}
+
+    {% for form in option_formset %}
+    {{ form.non_field_errors }}
+    {{form.errors}}
+        {% for field in form %}
+            <div class="fieldWrapper">
+                {{ field.errors }}
+                {{ field.non_form_errors }}
+                {{ field.label_tag }} {{ field }}
+            </div>
+        {% endfor %}
+        
+
+        {% endfor %}
+        
+    
     <input type="submit" value="Submit">
     {{ option_formset.non_form_errors }}
+    {{ option_formset.errors }}
 </form>
 
 
