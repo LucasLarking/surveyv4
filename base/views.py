@@ -4,22 +4,22 @@ from django.forms import BaseFormSet, formset_factory
 
 
 from rest_framework import status
+from rest_framework.generics import ListCreateAPIView
+from rest_framework.mixins import ListModelMixin, CreateModelMixin
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .forms import Create_question_form, Create_option_form, BaseOptionFormset
 from .serializers import QuestionSerializer, SurveySerializer
-from .models import Survey, Question, Option
+from .models import Survey, Question
 
 
 class SurveyList(APIView):
     def get(self, request):
-        surveys_qs = Survey.objects.annotate(
-            question_count=Count('question')).all()
+        surveys_qs = Survey.objects.annotate(question_count=Count('question')).all()
         serializer = SurveySerializer(surveys_qs, many=True)
         return Response(serializer.data)
-  
+
     def post(self, request):
         serializer = SurveySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -29,42 +29,23 @@ class SurveyList(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+class SurveyDetail(APIView):
 
-@api_view(['GET', 'POST'])
-def survey_list(request):
-    if request.method == 'GET':
-        surveys_qs = Survey.objects.annotate(
-            question_count=Count('question')).all()
-        serializer = SurveySerializer(surveys_qs, many=True)
-        return Response(serializer.data)
-
-    elif request.method == 'POST':
-        serializer = SurveySerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        print(serializer.validated_data)
-        serializer.save()
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def survey_detail(request, pk):
-    survey_obj = get_object_or_404(
-        Survey.objects.annotate(
-            question_count=Count('question')), pk=pk)
-
-    if request.method == 'GET':
+    def get(self, request, pk):
+        survey_obj = get_object_or_404(Survey.objects.annotate(question_count=Count('question')), pk=pk)
         serializer = SurveySerializer(survey_obj)
-
         return Response(serializer.data)
 
-    if request.method == 'PUT':
+    def put(self, request, pk):
+        survey_obj = get_object_or_404(Survey.objects.annotate(question_count=Count('question')), pk=pk)
         serializer = SurveySerializer(survey_obj, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    elif request.method == 'DELETE':
+    def delete(self, request, pk):
+        survey_obj = get_object_or_404(Survey.objects.annotate(
+            question_count=Count('question')), pk=pk)
         survey_obj.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
