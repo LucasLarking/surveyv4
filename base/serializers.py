@@ -7,7 +7,7 @@ class SurveySerializer(serializers.ModelSerializer):
         model = Survey
         fields = ['id', 'survey', 'question_count']
 
-    question_count = serializers.IntegerField()
+    question_count = serializers.IntegerField(read_only=True)
 
 
 class QuestionSerializer(serializers.ModelSerializer):
