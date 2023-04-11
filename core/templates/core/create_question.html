@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>create question</h1>
+    <form action="" id="create_question_form" method="POST">
+      {%csrf_token%} {{Create_question_form}}
+      <br>
+      <label for="option">Option</label>
+      <input name="option" type="text">
+      <input type="submit" value="submit" />
+    </form>
+
+    <!-- <form action="" id="option_form">
+      <label for="option">Option</label>
+      <input name="option" type="text">
+      <br>
+      <input type="submit" value="submit" />
+    </form> -->
+
+    <script>
+      let create_question_form = document.querySelector(
+        "#create_question_form"
+      );
+      const question = create_question_form.querySelector("#id_question");
+      id = window.location.pathname.split("/")[2];
+      url = window.location.href;
+
+      create_question_form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        let formData = new FormData(create_question_form);
+        // formData.append('Authorization', 'JWT ' + localStorage.getItem("access"));
+        // console.log("formData", formData);
+        let formDataObject = Object.fromEntries(formData.entries());
+        // console.log("formDataObject", formDataObject);
+        // Format the plain form data as JSON
+        let formDataJsonString = JSON.stringify(formDataObject);
+        console.log("formDataJsonString", formDataJsonString);
+
+        fetch(`../api/surveys/${id}/questions/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: "JWT " + localStorage.getItem("access"),
+          },
+          // POST request body as JSON string.
+          body: formDataJsonString,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      });
+    </script>
+  </body>
+</html>

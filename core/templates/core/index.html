@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home Page</title>
+    <link rel="stylesheet" href="{% static 'core/main.css' %}" />
+  </head>
+  <body>
+    <h1>hELLO0</h1>
+
+    <div id="surveys">
+      <div class="survey">
+        <h3 class="survey_title"></h3>
+        <p class="description"></p>
+        <div class="questions">
+          <div class="question">
+            <h4 class="question_title"></h4>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const surveys = document.querySelector("#surveys");
+      const survey_template = surveys.querySelector(".survey");
+      fetch("api/surveys", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: "JWT " + localStorage.getItem("access"),
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          data.forEach((element) => {
+            let description = element["description"];
+            let title = element["survey"];
+            let survey = survey_template.cloneNode(true);
+            console.log(survey);
+            surveys.appendChild(survey);
+            survey.querySelector(".survey_title").textContent = title;
+            survey.querySelector(".description").textContent = description;
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+
+      console.log(1);
+    </script>
+  </body>
+</html>

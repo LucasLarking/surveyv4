@@ -1,11 +1,12 @@
 from rest_framework import serializers
 from .models import Survey, Question, Option
 from core.models import Customer
+from django.http import HttpResponseRedirect
+# from .signals import question_created
 
 
 
-
-class OptionSerializer(serializers.ModelSerializer):
+class OptionwSerializer(serializers.ModelSerializer):
     class Meta:
         model = Option
         fields = ['option']
@@ -19,7 +20,7 @@ class OptionSerializer(serializers.ModelSerializer):
 
 
 class QuestionSerializer(serializers.ModelSerializer):
-    option_set = OptionSerializer(many=True, read_only=True)
+    option_set = OptionwSerializer(many=True, read_only=True)
     class Meta:
         model = Question
         fields = ['id', 'question', 'survey', 'option_set']
@@ -46,7 +47,7 @@ class AddQuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ['question', 'survey']
+        fields = ['question', 'survey', 'image']
         read_only_fields = ['survey']
     
     def validate_survey(self, value):
@@ -58,12 +59,48 @@ class AddQuestionSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         survey = Survey.objects.get(id=self.context['survey'])
         question = self.validated_data['question']
+        # image = self.validated_data['image']
 
         self.instance = Question.objects.create(
             survey = survey,
-            question = question
+            question = question,
+            # image = image
         )
+        print(self.instance.id, '###id')
+        # question_created.send_robust(self.__class__, question=self.instance)
+        # return {'question': self.instance.question, 'id': self.instance.id}
+        return self.instance
 
+
+class OptionSerializer(serializers.ModelSerializer):
+    question = AddQuestionSerializer()
+    print('question', question)
+
+    class Meta:
+        model = Option
+        fields = ('option', 'question')
+
+    def create(self, validated_data):
+        print('creatubng iotuibn')
+        question_data = validated_data.pop('option')
+        question = Question.objects.create(**question_data)
+        validated_data['question'] = question
+        return super().create(validated_data)
+
+    def save(self, **kwargs):
+        print('question', question)
+        survey = Survey.objects.get(id=self.context['survey'])
+        question = self.validated_data['question']
+        # image = self.validated_data['image']
+
+        self.instance = Question.objects.create(
+            survey = survey,
+            question = question,
+            # image = image
+        )
+        print(self.instance.id, '###id')
+        # question_created.send_robust(self.__class__, question=self.instance)
+        # return {'question': self.instance.question, 'id': self.instance.id}
         return self.instance
 
 
@@ -77,6 +114,7 @@ class EditQuestionSerializer(serializers.ModelSerializer):
 class SurveySerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
     question_set = QuestionSerializer(many=True, read_only=True)
+    # question_set = AddQuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Survey
@@ -85,13 +123,28 @@ class SurveySerializer(serializers.ModelSerializer):
 
     question_count = serializers.IntegerField(read_only=True)
 
+    def validate_description(self, description):
+        if description == 'desc':
+            raise serializers.ValidationError('Description cannot be desc')
+        return description
+
     def save(self, **kwargs):
         print('###### ')
         print('Validated Data: ', self.validated_data)
         print('Context: ', self.context)
-        Survey.objects.get_or_create(
+        self.instance = Survey.objects.create(
             survey=self.validated_data['survey'],
             description=self.validated_data['description'],
 
             customer_id=Customer.objects.get(id=self.context['customer_id'])
         )
+
+        return self.instance
+        
+
+
+
+class UpdateSurveySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Survey
+        fields = ['survey', 'description']

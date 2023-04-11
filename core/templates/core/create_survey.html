@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>Create Survey</h1>
+    <form id="create_survey_form" action="" method="POST">
+      {%csrf_token%} {{Create_survey_form}}
+      <input type="submit" value="submit" />
+    </form>
+
+    <script>
+      let create_survey_form = document.querySelector("#create_survey_form");
+      const survey_title = create_survey_form.querySelector("#id_survey");
+      const description = create_survey_form.querySelector("#id_description");
+      create_survey_form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        let formData = new FormData(create_survey_form);
+        // formData.append('Authorization', 'JWT ' + localStorage.getItem("access"));
+        // console.log('formData',formData)
+        let formDataObject = Object.fromEntries(formData.entries());
+        // console.log('formDataObject',formDataObject)
+        // Format the plain form data as JSON
+        let formDataJsonString = JSON.stringify(formDataObject);
+        // console.log('formDataJsonString',formDataJsonString)
+
+
+
+        fetch("api/surveys/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            'Authorization': 'JWT '+localStorage.getItem("access"),
+            
+          },
+          // POST request body as JSON string.
+          body: formDataJsonString,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+
+ 
+            window.location.href = `http://127.0.0.1:8000/surveys/${data['id']}`;
+
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      });
+    </script>
+  </body>
+</html>

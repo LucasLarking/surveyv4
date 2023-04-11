@@ -4,6 +4,8 @@ from uuid import uuid4
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from core.models import Customer
+from .validators import validate_file_size
+
 def validate_even(value):
     if len(value) < 2:
         raise ValidationError(
@@ -22,7 +24,7 @@ class Survey(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4)
     survey = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
-    customer_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    customer_id = models.ForeignKey(Customer, blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
         return self.survey
@@ -38,6 +40,7 @@ class Question(models.Model):
     question = models.CharField(max_length=255, validators=[validate_even])
     survey = models.ForeignKey(Survey, on_delete=models.CASCADE, null=True, blank=True)
     customer_id = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
+    image = models.ImageField(upload_to='base/images', null=True, blank=True, validators=[validate_file_size])
 
     def get_absolute_url(self):
         return reverse('question-detail', kwargs={'pk': self.pk})

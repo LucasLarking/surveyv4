@@ -11,8 +11,18 @@ drf-nested-routers = "*"
 django-filter = "*"
 djoser = "*"
 djangorestframework-simplejwt = "*"
+pillow = "*"
+django-redis = "*"
+whitenoise = "*"
+gunicorn = "*"
 
 [dev-packages]
+pytest = "*"
+pytest-django = "*"
+pytest-watch = "*"
+model-bakery = "*"
+locust = "*"
+django-silk = "*"
 
 [requires]
 python_version = "3.11"
